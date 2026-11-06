@@ -45,25 +45,42 @@ The raw files are not clean, and handling that is a large part of the engineerin
 `notebooks/00_dataset_audit.ipynb` measures all five against your own copies before any
 table is designed, and writes `reports/dataset_audit.json` for the later phases.
 
-## Setup (Windows, Python 3.11)
+## Setup
+
+### This machine (provisioned 2026-11-06)
+
+| Component | Where |
+|---|---|
+| Python 3.11 venv with every pinned dependency | `.venv\` |
+| PostgreSQL 16.11 binaries | `%LOCALAPPDATA%\Programs\PostgreSQL\16\bin` |
+| Cluster data directory | `%LOCALAPPDATA%\PostgreSQL\data16` |
+| Database | `cyber_threat` on `127.0.0.1:5432`, role `postgres` |
+| Credentials | `.env` (gitignored) |
+| Start / stop the server | `scripts\db_start.cmd`, `scripts\db_stop.cmd` |
+
+PostgreSQL was installed from the official EDB binaries into the user profile instead of
+as a Windows service, because registering a service needs an elevated prompt this
+environment does not have. The consequence is that the server must be running before any
+database work: a logon entry starts it automatically, and that entry exits silently when
+something else already holds port 5432, so installing a full PostgreSQL service later
+will not create a conflict.
+
+### A fresh clone on another machine
 
 ```powershell
-# Prerequisites, once per machine
 winget install -e --id Python.Python.3.11
-winget install -e --id PostgreSQL.PostgreSQL.16
 winget install -e --id Git.Git
 # Power BI Desktop: Microsoft Store, or https://powerbi.microsoft.com/desktop/
 
-# Project environment
 cd "C:\Users\AMIT BIKRAM BEHERA\Desktop\pipipithon\cybersecurity-threat-analytics"
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1        # if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-# Database and secrets
-psql -U postgres -c "CREATE DATABASE cyber_threat;"
-Copy-Item .env.example .env          # then edit DB_PASSWORD
+# PostgreSQL 16, either the installer or the binaries zip used here:
+#   https://get.enterprisedb.com/postgresql/postgresql-16.11-1-windows-x64-binaries.zip
+Copy-Item .env.example .env          # then set DB_PASSWORD to match your cluster
 ```
 
 If a single pinned version in `requirements.txt` refuses to build on your machine, relax
