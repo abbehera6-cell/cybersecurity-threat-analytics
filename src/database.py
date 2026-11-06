@@ -38,6 +38,7 @@ from src.errors import PipelineError, ValidationError
 LOGGER = logging.getLogger("database")
 
 SCHEMA_FILE = settings.SQL_DIR / "schema.sql"
+VIEWS_FILE = settings.SQL_DIR / "views.sql"
 DEFAULT_PARQUET = settings.PROCESSED_DIR / "flows_clean.parquet"
 
 # Column order of the INSERT. Fixed arity keeps the VALUES template static even
@@ -106,20 +107,34 @@ INTEGER_COLUMNS = (
 )
 
 
+def create_engine_for(database_url: str | None = None) -> Engine:
+    """Engine for an explicit URL, or the one described by `.env`."""
+    return create_engine(database_url or settings.DATABASE_URL, pool_pre_ping=True)
+
+
 def create_engine_from_settings() -> Engine:
     """Engine for the database described by `.env`."""
-    return create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+    return create_engine_for()
+
+
+def apply_sql_file(engine: Engine, path: Path) -> None:
+    """Execute a whole .sql file in one transaction."""
+    with engine.begin() as connection:
+        connection.exec_driver_sql(path.read_text(encoding="utf-8"))
 
 
 def apply_schema(engine: Engine | None = None) -> None:
     """Create tables, indexes and label seeds. Safe to run repeatedly."""
     engine = engine or create_engine_from_settings()
-    sql_text = SCHEMA_FILE.read_text(encoding="utf-8")
-
-    with engine.begin() as connection:
-        connection.exec_driver_sql(sql_text)
-
+    apply_sql_file(engine, SCHEMA_FILE)
     LOGGER.info("schema applied from %s", SCHEMA_FILE)
+
+
+def apply_views(engine: Engine | None = None) -> None:
+    """(Re)create the reporting views. Safe to run repeatedly."""
+    engine = engine or create_engine_from_settings()
+    apply_sql_file(engine, VIEWS_FILE)
+    LOGGER.info("views applied from %s", VIEWS_FILE)
 
 
 def read_run_metadata(path: Path) -> dict[str, Any]:
@@ -260,6 +275,7 @@ def load_dataset(
     batch_size: int | None = None,
     apply_ddl: bool = True,
     metadata_path: Path | None = None,
+    database_url: str | None = None,
 ) -> dict[str, Any]:
     """Load a cleaned parquet into PostgreSQL. Returns a summary of the load."""
     source = Path(parquet_path) if parquet_path is not None else DEFAULT_PARQUET
@@ -272,9 +288,10 @@ def load_dataset(
     run_id = run_id or default_run_id(metadata)
     size = batch_size or settings.PIPELINE_BATCH_SIZE
 
-    engine = create_engine_from_settings()
+    engine = create_engine_for(database_url)
     if apply_ddl:
         apply_schema(engine)
+        apply_views(engine)
 
     attempted = 0
     inserted = 0
@@ -330,6 +347,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--parquet", type=Path, default=None, help="cleaned parquet to load")
     parser.add_argument("--run-id", default=None, help="override the run identifier")
     parser.add_argument("--schema-only", action="store_true", help="apply the schema and stop")
+    parser.add_argument("--views-only", action="store_true", help="apply the reporting views and stop")
     parser.add_argument("--batch-size", type=int, default=None)
     args = parser.parse_args(argv)
 
@@ -343,6 +361,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.schema_only:
             apply_schema()
             print(f"\nschema applied to {settings.DB_NAME} on {settings.DB_HOST}:{settings.DB_PORT}")
+            return 0
+
+        if args.views_only:
+            apply_views()
+            print(f"\nviews applied to {settings.DB_NAME} on {settings.DB_HOST}:{settings.DB_PORT}")
             return 0
 
         summary = load_dataset(args.parquet, args.run_id, batch_size=args.batch_size)

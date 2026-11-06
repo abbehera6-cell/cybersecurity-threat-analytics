@@ -15,7 +15,7 @@ hand-typed.
 | 1 | Repository skeleton, configuration, dataset audit | **done** |
 | 2 | ETL: ingestion, cleaning, feature engineering | **done** |
 | 3 | PostgreSQL schema and idempotent loader | **done** |
-| 4 | SQL analytics: 10 queries, CTEs, window functions, views | not started |
+| 4 | SQL analytics: 12 queries, CTEs, window functions, 7 views | **done** |
 | 5 | Exploratory data analysis notebooks and figures | not started |
 | 6 | Machine learning: Random Forest, Isolation Forest, K-Means | not started |
 | 7 | Power BI semantic model, four report pages, DAX | not started |
@@ -129,7 +129,7 @@ cybersecurity-threat-analytics/
 ├── data/processed/         parquet caches between stages (gitignored)
 ├── notebooks/              00_dataset_audit.ipynb, then 01-04 in later phases
 ├── src/                    ingestion, cleaning, features, pipeline orchestration
-├── sql/                    schema.sql, analytics_queries.sql
+├── sql/                    schema.sql, views.sql, analytics_queries.sql
 ├── models/                 fitted estimators and metrics (gitignored binaries)
 ├── dashboards/             powerbi_dashboard.pbix, dax_measures.md
 ├── reports/                project_report.md, architecture.png, dataset_audit.json
