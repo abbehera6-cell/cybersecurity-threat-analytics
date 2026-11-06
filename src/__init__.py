@@ -1,10 +1,14 @@
 """Pipeline source package.
 
-Modules are added phase by phase:
+Modules, in execution order:
 
-    data_ingestion.py    Phase 2 - read and validate the raw CSVs
-    data_cleaning.py     Phase 2 - dedupe, types, timestamps, invalid values
-    feature_engineering.py  Phase 2 - derived flow features
-    database.py          Phase 3 - PostgreSQL connection and bulk load
-    pipeline.py          Phase 2+ - orchestrates the above end to end
+    errors.py               exceptions that mean "this run is not trustworthy"
+    data_ingestion.py       read the raw CSVs, normalise the header, validate the schema
+    data_cleaning.py        duplicates, types, infinities, timestamps, labels
+    feature_engineering.py  derived flow features, attack flag and attack family
+    pipeline.py             orchestrates the four stages and writes the parquet
+
+Run the whole thing from the project root with:
+
+    python -m src.pipeline
 """

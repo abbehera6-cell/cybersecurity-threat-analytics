@@ -13,7 +13,7 @@ hand-typed.
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Repository skeleton, configuration, dataset audit | **done** |
-| 2 | ETL: ingestion, cleaning, feature engineering | not started |
+| 2 | ETL: ingestion, cleaning, feature engineering | **done** |
 | 3 | PostgreSQL schema and idempotent loader | not started |
 | 4 | SQL analytics: 10 queries, CTEs, window functions, views | not started |
 | 5 | Exploratory data analysis notebooks and figures | not started |
@@ -75,9 +75,26 @@ that one line to `>=` and re-run; do not upgrade the whole file.
 # 1. put the 8 CICIDS2017 CSVs in data/raw/
 # 2. execute the audit
 jupyter lab notebooks/00_dataset_audit.ipynb
+# 3. build the cleaned dataset (writes data/processed/flows_clean.parquet)
+python -m src.pipeline
+# 4. or validate without writing anything
+python -m src.pipeline --dry-run
+# 5. run the tests
+python -m pytest -q
 ```
 
-The last cell prints a gate. All five lines should read `[x]` before Phase 2 begins.
+The audit's last cell prints a gate. All five lines should read `[x]` before the
+pipeline is worth running.
+
+The pipeline prints a reconciliation block and refuses to publish a dataset where
+`rows in` does not equal `rows out + duplicates + invalid rows`:
+
+```
+rows in        : 29
+duplicates     : 1
+invalid rows   : 1
+rows out       : 27
+```
 
 ## Repository layout
 
@@ -87,7 +104,7 @@ cybersecurity-threat-analytics/
 ├── data/raw/               the 8 CSVs (gitignored)
 ├── data/processed/         parquet caches between stages (gitignored)
 ├── notebooks/              00_dataset_audit.ipynb, then 01-04 in later phases
-├── src/                    pipeline modules, added phase by phase
+├── src/                    ingestion, cleaning, features, pipeline orchestration
 ├── sql/                    schema.sql, analytics_queries.sql
 ├── models/                 fitted estimators and metrics (gitignored binaries)
 ├── dashboards/             powerbi_dashboard.pbix, dax_measures.md
