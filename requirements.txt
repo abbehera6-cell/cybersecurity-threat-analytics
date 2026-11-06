@@ -26,6 +26,8 @@ seaborn==0.13.2
 
 # --- Machine learning ------------------------------------------------------
 scikit-learn==1.5.2
+scipy==1.13.1              # pinned deliberately: scikit-learn 1.5.2 predates the
+                           # scipy 1.16+ deprecations and fails in obscure paths
 joblib==1.4.2
 
 # --- Notebooks -------------------------------------------------------------
