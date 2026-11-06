@@ -1,0 +1,41 @@
+# Enterprise Cybersecurity & Threat Intelligence Analytics Platform
+# Python 3.11 on Windows. Install with:
+#   .\.venv\Scripts\Activate.ps1
+#   python -m pip install --upgrade pip
+#   pip install -r requirements.txt
+#
+# Versions are pinned to a set that is known to resolve together on CPython 3.11.
+# If a pin fails to build on your machine, relax that single line with ">=" and
+# re-run the install - do not upgrade the whole file blindly.
+
+# --- Core data stack -------------------------------------------------------
+pandas==2.2.3
+numpy==1.26.4
+pyarrow==17.0.0            # parquet cache between the cleaning and load stages
+
+# --- PostgreSQL ------------------------------------------------------------
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+
+# --- Configuration / secrets ----------------------------------------------
+python-dotenv==1.0.1
+
+# --- Exploratory analysis and EDA figures ---------------------------------
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# --- Machine learning ------------------------------------------------------
+scikit-learn==1.5.2
+joblib==1.4.2
+
+# --- Notebooks -------------------------------------------------------------
+jupyterlab==4.2.5
+ipykernel==6.29.5
+nbformat==5.10.4
+
+# --- Automation ------------------------------------------------------------
+APScheduler==3.10.4
+tqdm==4.66.5
+
+# --- Tests -----------------------------------------------------------------
+pytest==8.3.3

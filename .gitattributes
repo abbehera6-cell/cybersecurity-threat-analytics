@@ -1,0 +1,17 @@
+# Normalise line endings to LF in the index and in the working tree.
+# Without this, Windows Git rewrites every file as CRLF on checkout and the
+# first edit produces a whole-file diff.
+* text=auto eol=lf
+
+# Notebooks stay text so their JSON diffs are reviewable.
+*.ipynb text eol=lf
+
+# Binary artefacts: never diff, never merge, never convert line endings.
+*.pbix binary
+*.parquet binary
+*.joblib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.xlsx binary
+*.zip binary
