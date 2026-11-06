@@ -7,8 +7,10 @@ Modules, in execution order:
     data_cleaning.py        duplicates, types, infinities, timestamps, labels
     feature_engineering.py  derived flow features, attack flag and attack family
     pipeline.py             orchestrates the four stages and writes the parquet
+    database.py             applies sql/schema.sql and loads the parquet into PostgreSQL
 
 Run the whole thing from the project root with:
 
     python -m src.pipeline
+    python -m src.database
 """

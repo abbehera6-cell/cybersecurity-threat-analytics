@@ -14,7 +14,7 @@ hand-typed.
 |---|---|---|
 | 1 | Repository skeleton, configuration, dataset audit | **done** |
 | 2 | ETL: ingestion, cleaning, feature engineering | **done** |
-| 3 | PostgreSQL schema and idempotent loader | not started |
+| 3 | PostgreSQL schema and idempotent loader | **done** |
 | 4 | SQL analytics: 10 queries, CTEs, window functions, views | not started |
 | 5 | Exploratory data analysis notebooks and figures | not started |
 | 6 | Machine learning: Random Forest, Isolation Forest, K-Means | not started |
@@ -42,8 +42,15 @@ The raw files are not clean, and handling that is a large part of the engineerin
 | `Flow Bytes/s` and `Flow Packets/s` divide by zero duration | `inf` values poison statistics and scaling |
 | Tens of thousands of exact duplicate rows | Inflated counts and leaked train/test rows |
 
-`notebooks/00_dataset_audit.ipynb` measures all five against your own copies before any
-table is designed, and writes `reports/dataset_audit.json` for the later phases.
+`notebooks/00_dataset_audit.ipynb` measures all five before anything is modelled, and
+writes `reports/dataset_audit.json` for the later stages.
+
+**No endpoints in this release.** `MachineLearningCSV` contains `Destination Port` but no
+source or destination IP address; only the pcap-derived distribution carries endpoints.
+The warehouse therefore keeps `source_ip` and `destination_ip` nullable — they load as
+null here and populate automatically if the pcap-derived files are ever ingested. Any
+endpoint-based analysis must fall back to a protocol × destination-port view, and the
+report states that rather than implying endpoint data exists.
 
 ## Setup
 
