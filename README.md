@@ -31,6 +31,20 @@ Built as a professional, industry-grade Data Analytics & Engineering project for
 
 ![Enterprise Architecture](reports/architecture.png)
 
+### 📈 Executive Analytical Visual Gallery
+
+| Threat Category Distribution | Daily Malicious Surges |
+|:---:|:---:|
+| ![Threat Categories](reports/figures/01_attack_family_breakdown.png) | ![Daily Trends](reports/figures/03_daily_attack_trends.png) |
+
+| Top Targeted Enterprise Ports | Machine Learning Feature Importance |
+|:---:|:---:|
+| ![Targeted Ports](reports/figures/03_top_targeted_ports.png) | ![Feature Importance](reports/figures/04_rf_feature_importance.png) |
+
+| Isolation Forest Anomaly Matrix | K-Means Behavioral Archetypes |
+|:---:|:---:|
+| ![Isolation Forest CM](reports/figures/04_isolation_forest_cm.png) | ![K-Means PCA](reports/figures/04_kmeans_clusters_pca.png) |
+
 The platform processes **2,830,743 raw network events** through an automated 5-stage pipeline:
 1. **Extraction & Sanitization:** Reads multi-encoding CSVs, cleans whitespace-padded headers.
 2. **Transformation & Lakehouse:** Drops duplicates, sanitizes infinities, downcasts numeric types saving ~78% memory, and exports to `data/processed/flows_clean.parquet` (2,574,264 rows).
@@ -89,7 +103,13 @@ python scripts/generate_architecture_diagram.py
 python scripts/export_powerbi_data.py
 ```
 
-### 6. Run Automated Pipeline Scheduler
+### 6. Launch Interactive Streamlit SOC Web Application
+```powershell
+# Launch interactive dark-themed security dashboard with real-time ML predictor
+streamlit run src/app.py
+```
+
+### 7. Run Automated Pipeline Scheduler
 ```powershell
 # Execute single-shot automated ETL + ML cycle
 python src/automation_scheduler.py --run-once
