@@ -52,8 +52,9 @@ CREATE TABLE IF NOT EXISTS network_flows (
     flow_id                 BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     flow_key                TEXT        NOT NULL UNIQUE,
     run_id                  TEXT        NOT NULL REFERENCES pipeline_runs (run_id) ON DELETE CASCADE,
-    captured_at             TIMESTAMP   NOT NULL,
+    captured_at             TIMESTAMP,
     capture_date            DATE        NOT NULL,
+    time_source             TEXT        NOT NULL,
     source_ip               INET,
     destination_ip          INET,
     source_port             INTEGER,
@@ -72,7 +73,8 @@ CREATE TABLE IF NOT EXISTS network_flows (
 
 COMMENT ON TABLE  network_flows IS 'One row per cleaned CICIDS2017 flow record.';
 COMMENT ON COLUMN network_flows.flow_key IS 'source_file:row_index - the natural key used for idempotent loading.';
-COMMENT ON COLUMN network_flows.captured_at IS 'Flow timestamp exactly as recorded in the capture. Deliberately timestamp WITHOUT time zone: CICIDS2017 has no zone, and timestamptz would silently reinterpret it in the server locale.';
+COMMENT ON COLUMN network_flows.captured_at IS 'Flow timestamp when the release carries one; NULL for the MachineLearningCSV release. Deliberately timestamp WITHOUT time zone: the source has no zone.';
+COMMENT ON COLUMN network_flows.time_source IS 'csv_timestamp when parsed from the file, capture_file when the day came from the file name. Never fabricated.';
 
 CREATE INDEX IF NOT EXISTS idx_network_flows_captured_at
     ON network_flows (captured_at);

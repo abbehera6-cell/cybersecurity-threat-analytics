@@ -1,0 +1,196 @@
+/* ==============================================================================
+   ENTERPRISE CYBERSECURITY & THREAT INTELLIGENCE ANALYTICS PLATFORM
+   POWER BI DAX MEASURES LIBRARY (PAGE 1 TO PAGE 4)
+   Theme: Dark Enterprise Security Operations Center (SOC)
+   ============================================================================== */
+
+// ------------------------------------------------------------------------------
+// 1. PAGE 1: SECURITY OVERVIEW (Headline KPI Cards & Distribution)
+// ------------------------------------------------------------------------------
+
+// Total Network Events Processed
+Total Network Events = 
+COUNTROWS('NetworkFlows')
+
+// Total Confirmed Malicious Events
+Total Malicious Events = 
+CALCULATE(
+    COUNTROWS('NetworkFlows'),
+    'NetworkFlows'[is_attack] = TRUE()
+)
+
+// Total Benign Events
+Total Benign Events = 
+CALCULATE(
+    COUNTROWS('NetworkFlows'),
+    'NetworkFlows'[is_attack] = FALSE()
+)
+
+// Benign Traffic Percentage
+Benign Traffic Pct = 
+DIVIDE([Total Benign Events], [Total Network Events], 0)
+
+// Attack Traffic Percentage
+Attack Traffic Pct = 
+DIVIDE([Total Malicious Events], [Total Network Events], 0)
+
+// Active Threat Categories (Distinct Attack Families)
+Distinct Attack Categories = 
+CALCULATE(
+    DISTINCTCOUNT('NetworkFlows'[attack_family]),
+    'NetworkFlows'[is_attack] = TRUE()
+)
+
+// Total Data Volume Transferred (in Gigabytes)
+Total Volume GB = 
+DIVIDE(
+    SUM('NetworkFlows'[total_bytes]),
+    1073741824,
+    0
+)
+
+// Average Flow Duration (in Milliseconds)
+Avg Flow Duration MS = 
+AVERAGE('NetworkFlows'[duration_ms])
+
+
+// ------------------------------------------------------------------------------
+// 2. PAGE 2: ATTACK ANALYTICS (Threat Hierarchy & Attack Vectors)
+// ------------------------------------------------------------------------------
+
+// Top Attack Family by Volume
+Top Attack Family = 
+TOPN(
+    1,
+    VALUES('NetworkFlows'[attack_family]),
+    [Total Malicious Events],
+    DESC
+)
+
+// Attack Share of Current Selected Category
+Attack Family Share Pct = 
+VAR CurrentFamilyAttacks = [Total Malicious Events]
+VAR TotalAttacksAll = 
+    CALCULATE(
+        [Total Malicious Events],
+        ALLSELECTED('NetworkFlows')
+    )
+RETURN
+    DIVIDE(CurrentFamilyAttacks, TotalAttacksAll, 0)
+
+// Malicious Flows on Port 80 (HTTP Attack Vector)
+HTTP Attack Flows = 
+CALCULATE(
+    [Total Malicious Events],
+    'NetworkFlows'[destination_port] = 80
+)
+
+// Malicious Flows on Port 443 (HTTPS / Encrypted Vector)
+HTTPS Attack Flows = 
+CALCULATE(
+    [Total Malicious Events],
+    'NetworkFlows'[destination_port] = 443
+)
+
+// Malicious Flows on Management Ports (SSH 22, Telnet 23, RDP 3389)
+Admin Port Attacks = 
+CALCULATE(
+    [Total Malicious Events],
+    'NetworkFlows'[destination_port] IN {22, 23, 3389}
+)
+
+
+// ------------------------------------------------------------------------------
+// 3. PAGE 3: NETWORK TRAFFIC ANALYTICS (Bandwidth & Rate Diagnostics)
+// ------------------------------------------------------------------------------
+
+// Average Transfer Speed (Kilobytes per Second)
+Avg Throughput KBps = 
+DIVIDE(
+    AVERAGE('NetworkFlows'[bytes_per_second]),
+    1024,
+    0
+)
+
+// Average Packet Transmission Rate (Packets per Second)
+Avg Packet Rate PPS = 
+AVERAGE('NetworkFlows'[packets_per_second])
+
+// Flow Asymmetry Index (Forward Byte Ratio)
+Avg Forward Byte Ratio = 
+AVERAGE('NetworkFlows'[forward_byte_ratio])
+
+// Suspicious High-Rate Flows (> 1 MB/s transfer rate)
+Suspicious High Rate Flows = 
+CALCULATE(
+    COUNTROWS('NetworkFlows'),
+    'NetworkFlows'[bytes_per_second] > 1000000
+)
+
+// Busiest Port by Flow Volume
+Busiest Port = 
+TOPN(
+    1,
+    VALUES('NetworkFlows'[destination_port]),
+    [Total Network Events],
+    DESC
+)
+
+
+// ------------------------------------------------------------------------------
+// 4. PAGE 4: THREAT DETECTION & MACHINE LEARNING INSIGHTS
+// ------------------------------------------------------------------------------
+
+// Total Anomalies Flagged by Isolation Forest
+Total Anomalies Flagged = 
+CALCULATE(
+    COUNTROWS('ThreatPredictions'),
+    'ThreatPredictions'[is_anomaly_predicted] = 1
+)
+
+// Isolation Forest Anomaly Detection Rate
+Anomaly Rate Pct = 
+DIVIDE(
+    [Total Anomalies Flagged],
+    COUNTROWS('ThreatPredictions'),
+    0
+)
+
+// Critical Risk Incidents (Flagged by IF AND Classified as Attack by RF)
+Critical Risk Incidents = 
+CALCULATE(
+    COUNTROWS('ThreatPredictions'),
+    'ThreatPredictions'[risk_tier] = "CRITICAL"
+)
+
+// High Risk Incidents
+High Risk Incidents = 
+CALCULATE(
+    COUNTROWS('ThreatPredictions'),
+    'ThreatPredictions'[risk_tier] = "HIGH"
+)
+
+// Medium Risk Incidents (Zero-day / Unclassified Anomalies)
+Medium Risk Incidents = 
+CALCULATE(
+    COUNTROWS('ThreatPredictions'),
+    'ThreatPredictions'[risk_tier] = "MEDIUM"
+)
+
+// Model Prediction Accuracy (Random Forest vs Observed)
+RF Model Concordance = 
+VAR MatchingRows = 
+    CALCULATE(
+        COUNTROWS('ThreatPredictions'),
+        FILTER(
+            'ThreatPredictions',
+            'ThreatPredictions'[predicted_attack_label] = 'ThreatPredictions'[observed_label]
+        )
+    )
+RETURN
+    DIVIDE(MatchingRows, COUNTROWS('ThreatPredictions'), 0)
+
+// Average Anomaly Decision Score
+Avg Anomaly Score = 
+AVERAGE('ThreatPredictions'[anomaly_score])
+

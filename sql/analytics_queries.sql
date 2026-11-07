@@ -190,6 +190,9 @@ ORDER BY capture_date;
 -- The frame clause makes the average read the current hour plus the two before
 -- it, which is a moving window, not a cumulative total.
 -- ===========================================================================
+-- NOTE: the MachineLearningCSV release carries no timestamps, so captured_at is
+-- NULL for every row and this query returns no rows against it. It runs as
+-- intended on the pcap-derived release, which does record the clock time.
 WITH hourly AS (
     SELECT
         date_trunc('hour', f.captured_at)                     AS hour_bucket,
@@ -197,6 +200,7 @@ WITH hourly AS (
     FROM network_flows f
     JOIN attack_labels a ON a.label_id = f.label_id
     WHERE a.is_attack
+      AND f.captured_at IS NOT NULL
     GROUP BY date_trunc('hour', f.captured_at)
 ),
 smoothed AS (

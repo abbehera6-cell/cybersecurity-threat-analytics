@@ -121,8 +121,9 @@ def run_pipeline(
             "attack_labels": int(combined.loc[combined["is_attack"], "observed_label"].nunique()),
             "columns": int(combined.shape[1]),
             "capture_dates": sorted(str(value) for value in combined["capture_date"].dt.date.unique()),
-            "window_start": str(combined[CAPTURED_AT_COLUMN].min()),
-            "window_end": str(combined[CAPTURED_AT_COLUMN].max()),
+            "first_capture_date": str(combined["capture_date"].min()),
+            "last_capture_date": str(combined["capture_date"].max()),
+            "rows_with_timestamp": int(combined[CAPTURED_AT_COLUMN].notna().sum()),
         }
     )
 
@@ -182,7 +183,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"rows out       : {totals['rows_out']:,}")
     print(f"attack rows    : {totals['attack_rows']:,}")
     print(f"attack labels  : {totals['attack_labels']}")
-    print(f"capture window : {totals['window_start']} -> {totals['window_end']}")
+    print(f"capture days   : {totals['first_capture_date']} -> {totals['last_capture_date']}")
+    print(f"with timestamp : {totals['rows_with_timestamp']:,}")
     print(f"output         : {report['output_path'] or '(dry run, nothing written)'}")
     return 0
 

@@ -53,8 +53,10 @@ TIMESTAMP_FORMATS = (
 # Below this share of parseable timestamps the chosen format is wrong, not the data.
 MIN_TIMESTAMP_MATCH_RATE = 0.95
 
+# captured_at is not required: it is null for the whole MachineLearningCSV
+# release. The capture day always exists, either parsed or derived from the file.
 REQUIRED_OUTPUT_COLUMNS = (
-    CAPTURED_AT_COLUMN,
+    "capture_date",
     OBSERVED_LABEL_COLUMN,
     "destination_port",
     "flow_duration",
@@ -209,12 +211,31 @@ def clean_capture_frame(frame: pd.DataFrame, source_file: str = "") -> CleanResu
         infinity_cells = int(np.isinf(values).sum())
         working[numeric_columns] = working[numeric_columns].replace([np.inf, -np.inf], np.nan)
 
-    # 5. timestamps
-    captured_at, timestamp_format, timestamp_rate = parse_capture_timestamps(
-        working[TIMESTAMP_COLUMN], source_file
-    )
-    working[CAPTURED_AT_COLUMN] = captured_at
-    working = working.drop(columns=[TIMESTAMP_COLUMN])
+    # 5. time. The MachineLearningCSV release has no timestamp column, so the
+    #    capture day comes from the file name and captured_at stays null. A
+    #    release that does carry timestamps keeps them, and the source of the day
+    #    is recorded either way.
+    if TIMESTAMP_COLUMN in working.columns:
+        captured_at, timestamp_format, timestamp_rate = parse_capture_timestamps(
+            working[TIMESTAMP_COLUMN], source_file
+        )
+        working[CAPTURED_AT_COLUMN] = captured_at
+        working = working.drop(columns=[TIMESTAMP_COLUMN])
+        working["capture_date"] = captured_at.dt.normalize()
+        time_source = settings.TIME_SOURCE_CSV_TIMESTAMP
+    else:
+        capture_day = settings.capture_date_for_file(source_file)
+        if capture_day is None:
+            raise SchemaError(
+                f"{source_file}: has no timestamp column and its name does not identify "
+                f"a capture day. Known prefixes: {list(settings.CAPTURE_FILE_DAYS)}"
+            )
+        working[CAPTURED_AT_COLUMN] = pd.NaT
+        working["capture_date"] = pd.Timestamp(capture_day)
+        timestamp_format, timestamp_rate = None, 0.0
+        time_source = settings.TIME_SOURCE_CAPTURE_FILE
+
+    working["time_source"] = time_source
 
     # 6. labels
     raw_labels = working[LABEL_COLUMN].astype("string").str.strip()
@@ -235,7 +256,6 @@ def clean_capture_frame(frame: pd.DataFrame, source_file: str = "") -> CleanResu
     working = working.dropna(subset=list(REQUIRED_OUTPUT_COLUMNS)).reset_index(drop=True)
     dropped_invalid = before_drop - len(working)
 
-    working["capture_date"] = working[CAPTURED_AT_COLUMN].dt.normalize()
     working["source_file"] = source_file
     working["row_index"] = np.arange(len(working), dtype="int64")
 
@@ -247,6 +267,7 @@ def clean_capture_frame(frame: pd.DataFrame, source_file: str = "") -> CleanResu
         "duplicate_rows": duplicate_rows,
         "dropped_invalid": dropped_invalid,
         "rows_out": int(len(working)),
+        "time_source": time_source,
         "infinity_cells": infinity_cells,
         "timestamp_format": timestamp_format,
         "timestamp_match_rate": timestamp_rate,

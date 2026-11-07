@@ -126,10 +126,11 @@ def test_build_rows_maps_labels_to_lookup_ids():
 def test_build_rows_leaves_absent_endpoints_as_null():
     rows = build_rows(_frame(), "run_x", {"BENIGN": 1, "PortScan": 11})
 
-    # source_ip, destination_ip, source_port are positional 4, 5, 6
-    assert rows[0][4] is None
+    # time_source is positional 4; source_ip, destination_ip, source_port follow
+    assert rows[0][4] == settings.TIME_SOURCE_CAPTURE_FILE
     assert rows[0][5] is None
     assert rows[0][6] is None
+    assert rows[0][7] is None
 
 
 def test_build_rows_rejects_unseeded_labels():

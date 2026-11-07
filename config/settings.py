@@ -143,3 +143,29 @@ def normalize_label(raw_label: str) -> str:
 def label_family(canonical_label: str):
     """Return the reporting family for a canonical label, or None for BENIGN."""
     return LABEL_FAMILY.get(canonical_label)
+
+
+# ---------------------------------------------------------------------------
+# Capture day
+# ---------------------------------------------------------------------------
+# The MachineLearningCSV release contains 79 columns: 78 numeric features plus
+# Label. It has NO timestamp column - timestamps exist only in the pcap-derived
+# distribution. The capture day is still recoverable from the file name, and
+# that is the only time information this release provides. Inventing an hour for
+# these rows would be fabrication, so the loader records where the day came from.
+CAPTURE_FILE_DAYS = {
+    "monday": "2017-07-03",
+    "tuesday": "2017-07-04",
+    "wednesday": "2017-07-05",
+    "thursday": "2017-07-06",
+    "friday": "2017-07-07",
+}
+
+TIME_SOURCE_CSV_TIMESTAMP = "csv_timestamp"
+TIME_SOURCE_CAPTURE_FILE = "capture_file"
+
+
+def capture_date_for_file(filename: str) -> str | None:
+    """Capture day implied by a CICIDS2017 capture file name, or None if unknown."""
+    prefix = Path(str(filename)).name.split("-")[0].strip().lower()
+    return CAPTURE_FILE_DAYS.get(prefix)

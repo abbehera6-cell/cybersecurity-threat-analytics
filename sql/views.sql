@@ -145,6 +145,7 @@ SELECT
     sum(f.total_bytes)                                      AS total_bytes
 FROM network_flows f
 JOIN attack_labels a ON a.label_id = f.label_id
+WHERE f.captured_at IS NOT NULL
 GROUP BY date_trunc('hour', f.captured_at),
          extract(hour FROM f.captured_at),
          f.capture_date;

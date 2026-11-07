@@ -36,10 +36,12 @@ TIMESTAMP_COLUMN = "timestamp"
 LABEL_COLUMN = "label"
 
 # Required by every later stage. Checked against the normalised header.
+# `timestamp` is deliberately absent: the MachineLearningCSV release has no such
+# column, so the capture day is recovered from the file name in the cleaning
+# stage. A release that does carry timestamps is handled as a better case.
 REQUIRED_COLUMNS = (
     "destination_port",
     "flow_duration",
-    TIMESTAMP_COLUMN,
     LABEL_COLUMN,
 )
 

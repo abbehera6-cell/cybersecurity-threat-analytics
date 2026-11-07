@@ -48,6 +48,7 @@ INSERT_COLUMNS = (
     "run_id",
     "captured_at",
     "capture_date",
+    "time_source",
     "source_ip",
     "destination_ip",
     "source_port",
@@ -87,7 +88,14 @@ SOURCE_COLUMNS = (
     "total_flags",
 )
 
-REQUIRED_PARQUET_COLUMNS = ("captured_at", "capture_date", "observed_label", "source_file", "row_index")
+REQUIRED_PARQUET_COLUMNS = (
+    "captured_at",
+    "capture_date",
+    "time_source",
+    "observed_label",
+    "source_file",
+    "row_index",
+)
 
 # What to actually read from parquet: the loadable columns plus the three that
 # build the row key and resolve the label. Omitting the label columns here is the
@@ -227,6 +235,9 @@ def build_rows(frame: pd.DataFrame, run_id: str, label_map: dict[str, int]) -> l
     out["run_id"] = run_id
     out["captured_at"] = frame["captured_at"]
     out["capture_date"] = frame["capture_date"]
+    out["time_source"] = (
+        frame["time_source"] if "time_source" in frame.columns else settings.TIME_SOURCE_CAPTURE_FILE
+    )
 
     # Endpoint columns exist in the pcap-derived releases but not in the
     # MachineLearningCSV release, so they are optional here and load as null.
