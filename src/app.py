@@ -264,3 +264,4 @@ elif view_mode == "🔍 4. Incident Log Explorer":
         st.caption(f"Displaying {len(filtered_df):,} matched events.")
     else:
         st.info("No scored dataset found. Please generate predictions via `python src/train_models.py`.")
+
